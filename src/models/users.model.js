@@ -3,9 +3,9 @@ let success;
 let message;
 
 exports.createUser = function(email, password) {
-  let userId = users.length + 1;
-  let user = {id: userId, email: email, password: password};
   if (users.length > 0) {
+    let userId = users[users.length-1].id+1;
+    let user = {id: userId, email: email, password: password};
     if (users.some((item)=>user.email === item.email)) {
       success = false;
       message = "Email is already registered";
@@ -17,6 +17,8 @@ exports.createUser = function(email, password) {
       return {success, message};
     }
   } else {
+    let userId = users.length + 1;
+    let user = {id: userId, email: email, password: password};
     users = [...users, user];
     success = true;
     message = "Success register user";
@@ -74,7 +76,7 @@ exports.getAllUsers = function(){
     return {success, message, users};
   } else {
     success = false;
-    message = "Gagal mendapatkan semua user";
+    message = "Belum ada user yang terdaftar";
     return {success, message};
   }
 };
