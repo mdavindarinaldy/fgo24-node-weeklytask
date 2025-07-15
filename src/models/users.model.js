@@ -27,6 +27,19 @@ exports.login = function(email, password) {
   } 
 };
 
+exports.getUser = function(id){
+  let user = users.find((item)=>item.id === parseInt(id));
+  if (user) {
+    return {result:true, user};
+  } else {
+    return {result:false};
+  }
+};
+
+exports.getAllUsers = function(){
+  return users;
+};
+
 exports.updateUser = function(id, newData){
   const userIndex = users.findIndex((item)=>item.id === parseInt(id));
   if (userIndex===-1) {
@@ -52,30 +65,5 @@ exports.deleteUser = function(id){
     success = true;
     message = "Berhasil menghapus user";
     return {success, message, deletedUser};
-  }
-};
-
-exports.getAllUsers = function(){
-  if (users.length > 0) {
-    success = true;
-    message = "Berhasil mendapatkan semua user";
-    return {success, message, users};
-  } else {
-    success = false;
-    message = "Belum ada user yang terdaftar";
-    return {success, message};
-  }
-};
-
-exports.getUser = function(id){
-  let user = users.find((item)=>item.id === parseInt(id));
-  if (user) {
-    success = true;
-    message = "Berhasil mendapatkan detail user";
-    return {success, message, user};
-  } else {
-    success = false;
-    message = "User tidak ditemukan";
-    return {success, message};
   }
 };
