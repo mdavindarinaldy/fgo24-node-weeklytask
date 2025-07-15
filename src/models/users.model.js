@@ -19,28 +19,12 @@ exports.createUser = function(email, password) {
 };
 
 exports.login = function(email, password) {
-  if (users.length > 0) {
-    const user = users.find((item)=> item.email === email);
-    if (user) {
-      if (user.password === password) {
-        success = true;
-        message = "Login berhasil";
-        return {success, message};
-      } else if (user.password !== password) {
-        success = false;
-        message = "Password salah!";
-        return {success, message};
-      } 
-    } else {
-      success = false;
-      message = "Email tidak terdaftar!";
-      return {success, message};
-    }
-  } else {
-    success = false;
-    message = "Belum ada user yang terdaftar";
-    return {success, message};
-  }
+  const user = users.find((item)=> item.email === email);
+  if (user.password === password) {
+    return {result:true, user};
+  } else if (user.password !== password) {
+    return {result:false};
+  } 
 };
 
 exports.updateUser = function(id, newData){
