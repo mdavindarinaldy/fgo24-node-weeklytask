@@ -12,7 +12,7 @@ exports.getUser = function(req, res) {
       results: responseUser,
     });
   } else {
-    res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+    res.status(http.HTTP_STATUS_NOT_FOUND).json({
       success: false,
       message: "User tidak ditemukan",
     });
@@ -45,16 +45,23 @@ exports.getAllUser = function(req, res) {
   };
 
   let message;
-  if (slicedUsers.length>0) {message="Berhasil mendapatkan daftar user";}
-  else {message="Tidak ada user yang ditemukan";}
-
-  const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email});
-  res.status(http.HTTP_STATUS_OK).json({
-    success: true,
-    message: message,
-    pageInfo: pageInfo,
-    results: responseUsers,
-  });
+  if (slicedUsers.length>0) {
+    message="Berhasil mendapatkan daftar user";
+    const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email});
+    res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: message,
+      pageInfo: pageInfo,
+      results: responseUsers,
+    });
+  }
+  else {
+    message="Tidak ada user yang ditemukan";
+    res.status(http.HTTP_STATUS_NOT_FOUND).json({
+      success: true,
+      message: message,
+    });
+  }
 };
 
 exports.updateUser = function(req, res) {
@@ -76,7 +83,7 @@ exports.updateUser = function(req, res) {
       });
     }
   } else {
-    res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+    res.status(http.HTTP_STATUS_NOT_FOUND).json({
       success: false,
       message: "User tidak ditemukan",
     });
@@ -97,7 +104,7 @@ exports.deleteUser = function(req, res) {
       }
     });
   } else {
-    res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+    res.status(http.HTTP_STATUS_NOT_FOUND).json({
       success: false,
       message: "User tidak ditemukan",
     });
