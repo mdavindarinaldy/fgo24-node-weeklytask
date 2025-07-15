@@ -23,11 +23,12 @@ exports.deleteUser = function(req, res) {
 
 exports.getAllUser = function(req, res) {
   const {success, message, users} = getAllUsers();
+  const responseUsers = users.map((item)=> item={id:item.id,email: item.email});
   if (success) {
     res.status(http.HTTP_STATUS_OK).json({
       success: success,
       message: message,
-      results: users,
+      results: responseUsers,
     });
   } else {
     res.status(http.HTTP_STATUS_BAD_REQUEST).json({
