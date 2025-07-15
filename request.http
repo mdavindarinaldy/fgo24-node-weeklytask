@@ -9,6 +9,17 @@ Content-Type: application/json
 
 ###
 
+POST /auth/register
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "email":"naldy@mail.com",
+  "password":"yuhu"
+}
+
+###
+
 POST /auth/login
 Host: localhost:8080
 Content-Type: application/json
@@ -20,10 +31,23 @@ Content-Type: application/json
 
 ###
 
-DELETE /users/1
+DELETE /users/10
 Host: localhost:8080
 
 ###
 
-GET /users
+GET /users?search=x
 Host: localhost:8080
+
+###
+GET /users/1
+Host: localhost:8080
+
+###
+PATCH /users/1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "email":"yuhu@mail.com"
+}
