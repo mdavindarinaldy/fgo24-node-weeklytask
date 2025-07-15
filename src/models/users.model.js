@@ -51,15 +51,25 @@ exports.login = function(email, password) {
   }
 };
 
-exports.updateUser = function(){
-
+exports.updateUser = function(id, newData){
+  const userIndex = users.findIndex((item)=>item.id === parseInt(id));
+  if (userIndex===-1) {
+    success = false;
+    message = "Tidak ada user yang ditemukan";
+    return {success, message};
+  } else {
+    users[userIndex] = {...users[userIndex], ...newData};
+    success = true;
+    message = "Berhasil melakukan perubahan data";
+    return {success, message, user: users[userIndex]};
+  }
 };
 
 exports.deleteUser = function(id){
   let index = users.findIndex((item)=>item.id === parseInt(id));
   if (index===-1) {
     success = false;
-    message = "Tidak ada user dengan email tersebut!";
+    message = "Tidak ada user yang ditemukan";
     return {success, message};
   } else {
     let deletedUser = users.splice(index, 1);
@@ -82,7 +92,7 @@ exports.getAllUsers = function(){
 };
 
 exports.getUser = function(id){
-  let user = users.find((item)=>item.id === id);
+  let user = users.find((item)=>item.id === parseInt(id));
   if (user) {
     success = true;
     message = "Berhasil mendapatkan detail user";

@@ -1,5 +1,5 @@
 const {constants: http} = require("http2");
-const { deleteUser, getAllUsers, getUser } = require("../models/users.model");
+const { deleteUser, getAllUsers, getUser, updateUser } = require("../models/users.model");
 
 exports.deleteUser = function(req, res) {
   const {id} = req.params;
@@ -54,4 +54,23 @@ exports.getAllUser = function(_req, res) {
       message: message,
     });
   }
+};
+
+exports.updateUser = function(req, res) {
+  const {id} = req.params;
+  const newData = req.body;
+  const {success, message, user} = updateUser(id, newData);
+  const responseUser = {id:user.id,email:user.email};
+  if (success) {
+    res.status(http.HTTP_STATUS_OK).json({
+      success: success,
+      message: message,
+      results: responseUser,
+    });
+  } else {
+    res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+      success: success,
+      message: message,
+    });
+  } 
 };
