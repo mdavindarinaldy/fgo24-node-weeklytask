@@ -1,5 +1,5 @@
 const {constants: http} = require("http2");
-const { deleteUser, getAllUsers, getUser, updateUser } = require("../models/users.model");
+const { deleteUser, getAllUsers, getUser, updateUser, isExist } = require("../models/users.model");
 
 exports.getUser = function(req, res) {
   const {id} = req.params;
@@ -35,20 +35,27 @@ exports.getAllUser = function(_req, res) {
 exports.updateUser = function(req, res) {
   const {id} = req.params;
   const newData = req.body;
-  const {success, message, user} = updateUser(id, newData);
-  const responseUser = {id:user.id,email:user.email};
-  if (success) {
-    res.status(http.HTTP_STATUS_OK).json({
-      success: success,
-      message: message,
-      results: responseUser,
-    });
+  const {result, userIndex} = getUser(id);
+  if (result) {
+    if (!isExist(newData.email)) {
+      const user = updateUser(userIndex, newData);
+      res.status(http.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Berhasil melakukan update data",
+        results: user,
+      });
+    } else {
+      res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Email sudah digunakan oleh user lain",
+      });
+    }
   } else {
     res.status(http.HTTP_STATUS_BAD_REQUEST).json({
-      success: success,
-      message: message,
+      success: false,
+      message: "User tidak ditemukan",
     });
-  } 
+  }
 };
 
 exports.deleteUser = function(req, res) {

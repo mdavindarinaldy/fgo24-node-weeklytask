@@ -28,9 +28,9 @@ exports.login = function(email, password) {
 };
 
 exports.getUser = function(id){
-  let user = users.find((item)=>item.id === parseInt(id));
-  if (user) {
-    return {result:true, user};
+  let userIndex = users.findIndex((item)=>item.id === parseInt(id));
+  if (userIndex !==-1) {
+    return {result:true, userIndex, user: users[userIndex]};
   } else {
     return {result:false};
   }
@@ -40,18 +40,9 @@ exports.getAllUsers = function(){
   return users;
 };
 
-exports.updateUser = function(id, newData){
-  const userIndex = users.findIndex((item)=>item.id === parseInt(id));
-  if (userIndex===-1) {
-    success = false;
-    message = "Tidak ada user yang ditemukan";
-    return {success, message};
-  } else {
-    users[userIndex] = {...users[userIndex], ...newData};
-    success = true;
-    message = "Berhasil melakukan perubahan data";
-    return {success, message, user: users[userIndex]};
-  }
+exports.updateUser = function(userIndex, newData){
+  users[userIndex] = {...users[userIndex], ...newData};
+  return users[userIndex];
 };
 
 exports.deleteUser = function(id){
