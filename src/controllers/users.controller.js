@@ -37,6 +37,13 @@ exports.getAllUser = function(req, res) {
   const lastIndex = (page * limit); 
 
   const slicedUsers = filteredUsers.slice(startIndex, lastIndex);
+  let nextLink, prevLink;
+  if (page < totalPage) {
+    nextLink = "localhost:8080/users?search="+search+"&page="+(page+1)+"&limit="+limit;
+  } else { nextLink = null; }
+  if (page > 1 ) {
+    prevLink = "localhost:8080/users?search="+search+"&page="+(page-1)+"&limit="+limit;
+  } else { prevLink = null; }
 
   const pageInfo = {
     totalPage: totalPage,
@@ -52,6 +59,8 @@ exports.getAllUser = function(req, res) {
       success: true,
       message: message,
       pageInfo: pageInfo,
+      prevPage: prevLink,
+      nextPage: nextLink,
       results: responseUsers,
     });
   }
