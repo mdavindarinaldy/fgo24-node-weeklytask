@@ -1,10 +1,10 @@
 const {constants: http} = require("http2");
-const {createUser, login, isExist} = require("../models/users.model");
+const {createUser, isExist, getUserByEmail} = require("../models/users.model");
 
 exports.login = function(req, res){
   const {email, password} = req.body;
   if(isExist(email)) {
-    const {result, user} = login(email, password);
+    const {result, user} = getUserByEmail(email, password);
     const responseUser = {id: user.id, email: user.email};
     if (result) {
       return res.status(http.HTTP_STATUS_OK).json({
