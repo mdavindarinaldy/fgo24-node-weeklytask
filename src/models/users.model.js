@@ -81,6 +81,15 @@ exports.getAllUsers = function(){
   }
 };
 
-exports.getUser = function(){
-
+exports.getUser = function(id){
+  let user = users.find((item)=>item.id === id);
+  if (user) {
+    success = true;
+    message = "Berhasil mendapatkan detail user";
+    return {success, message, user};
+  } else {
+    success = false;
+    message = "User tidak ditemukan";
+    return {success, message};
+  }
 };
