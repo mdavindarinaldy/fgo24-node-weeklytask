@@ -1,5 +1,5 @@
 const {constants: http} = require("http2");
-const {createUser, login} = require("../models/users.model");
+const {createUser, login, isExist} = require("../models/users.model");
 
 exports.login = function(req, res){
   const {email, password} = req.body;
@@ -19,16 +19,18 @@ exports.login = function(req, res){
 
 exports.register = function(req, res) {
   const {email, password} = req.body;
-  const {success, message} = createUser(email, password);
-  if (success) {
+  if (!isExist(email)) {
+    const user = createUser(email, password);
+    const responseUser = {id:user.id,email:user.email};
     return res.status(http.HTTP_STATUS_CREATED).json({
-      success: success,
-      message: message
+      success: true,
+      message: "User berhasil melakukan registrasi",
+      results: responseUser
     });
   } else {
     return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
-      success: success,
-      message: message
+      success: false,
+      message: "Email sudah digunakan"
     });
   }
 };

@@ -2,28 +2,20 @@ let users = [];
 let success;
 let message;
 
+exports.isExist = function(email) {
+  return users.some((item)=> item.email === email);
+};
+
 exports.createUser = function(email, password) {
+  let userId;
   if (users.length > 0) {
-    let userId = users[users.length-1].id+1;
-    let user = {id: userId, email: email, password: password};
-    if (users.some((item)=>user.email === item.email)) {
-      success = false;
-      message = "Email is already registered";
-      return {success, message};
-    } else {
-      users = [...users, user];
-      success = true;
-      message = "Success register user";
-      return {success, message};
-    }
+    userId = users[users.length-1].id+1;
   } else {
-    let userId = users.length + 1;
-    let user = {id: userId, email: email, password: password};
-    users = [...users, user];
-    success = true;
-    message = "Success register user";
-    return {success, message};
+    userId = 1;
   }
+  let user = {id: userId, email: email, password: password};
+  users = [...users, user];
+  return user;
 };
 
 exports.login = function(email, password) {
