@@ -27,7 +27,7 @@ exports.getAllUser = function(req, res) {
   if (!page) {page=1;}
   if (!limit) {limit=5;}
 
-  const filteredUsers = getAllUsers(search);
+  const filteredUsers = getAllUsers(search.toLowerCase());
 
   const totalData = filteredUsers.length;
   const totalPage = Math.ceil(totalData/limit);
