@@ -60,11 +60,12 @@ exports.updateUser = function(req, res) {
 
 exports.deleteUser = function(req, res) {
   const {id} = req.params;
-  const {success, message, deletedUser} = deleteUser(id);
-  if (success) {
+  const {result, userIndex} = getUser(id);
+  if (result) {
+    const deletedUser = deleteUser(userIndex);
     res.status(http.HTTP_STATUS_OK).json({
-      success: success,
-      message: message,
+      success: true,
+      message: "Berhasil menghapus user",
       results: {
         id: deletedUser[0].id,
         email: deletedUser[0].email
@@ -72,8 +73,8 @@ exports.deleteUser = function(req, res) {
     });
   } else {
     res.status(http.HTTP_STATUS_BAD_REQUEST).json({
-      success: success,
-      message: message,
+      success: false,
+      message: "User tidak ditemukan",
     });
   }
 };

@@ -1,6 +1,4 @@
 let users = [];
-let success;
-let message;
 
 exports.isExist = function(email) {
   return users.some((item)=> item.email === email);
@@ -45,16 +43,7 @@ exports.updateUser = function(userIndex, newData){
   return users[userIndex];
 };
 
-exports.deleteUser = function(id){
-  let index = users.findIndex((item)=>item.id === parseInt(id));
-  if (index===-1) {
-    success = false;
-    message = "Tidak ada user yang ditemukan";
-    return {success, message};
-  } else {
-    let deletedUser = users.splice(index, 1);
-    success = true;
-    message = "Berhasil menghapus user";
-    return {success, message, deletedUser};
-  }
+exports.deleteUser = function(index){
+  let deletedUser = users.splice(index, 1);
+  return deletedUser;
 };
