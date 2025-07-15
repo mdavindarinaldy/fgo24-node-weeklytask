@@ -1,9 +1,9 @@
 const {constants: http} = require("http2");
-const { deleteUser, getAllUsers, getUser, updateUser, isExist } = require("../models/users.model");
+const { deleteUser, getAllUsers, updateUser, isExist, getUserById } = require("../models/users.model");
 
 exports.getUser = function(req, res) {
   const {id} = req.params;
-  const {result, user} = getUser(id);
+  const {result, user} = getUserById(id);
   if (result) {
     const responseUser = {id:user.id, email:user.email};
     res.status(http.HTTP_STATUS_OK).json({
@@ -19,15 +19,40 @@ exports.getUser = function(req, res) {
   }
 };
 
-exports.getAllUser = function(_req, res) {
-  const users = getAllUsers();
+exports.getAllUser = function(req, res) {
+  let search = req.query.search;
+  let page = parseInt(req.query.page);
+  let limit = parseInt(req.query.limit);
+  if (!search) {search="";}
+  if (!page) {page=1;}
+  if (!limit) {limit=5;}
+
+  const filteredUsers = getAllUsers(search);
+
+  const totalData = filteredUsers.length;
+  const totalPage = Math.ceil(totalData/limit);
+  if (page>totalPage) { page=totalPage; }
+
+  const startIndex = (page - 1) * limit;
+  const lastIndex = (page * limit); 
+
+  const slicedUsers = filteredUsers.slice(startIndex, lastIndex);
+
+  const pageInfo = {
+    totalPage: totalPage,
+    currentPage: page,
+    item: "Showing "+slicedUsers.length+" Of "+totalData, 
+  };
+
   let message;
-  if (users.length>0) {message="Berhasil mendapatkan daftar users";}
-  else {message="Beluma ada user yang terdaftar";}
-  const responseUsers = users?.map((item)=> item={id:item.id,email: item.email});
+  if (slicedUsers.length>0) {message="Berhasil mendapatkan daftar user";}
+  else {message="Tidak ada user yang ditemukan";}
+
+  const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email});
   res.status(http.HTTP_STATUS_OK).json({
     success: true,
     message: message,
+    pageInfo: pageInfo,
     results: responseUsers,
   });
 };
@@ -35,7 +60,7 @@ exports.getAllUser = function(_req, res) {
 exports.updateUser = function(req, res) {
   const {id} = req.params;
   const newData = req.body;
-  const {result, userIndex} = getUser(id);
+  const {result, userIndex} = getUserById(id);
   if (result) {
     if (!isExist(newData.email)) {
       const user = updateUser(userIndex, newData);
@@ -60,7 +85,7 @@ exports.updateUser = function(req, res) {
 
 exports.deleteUser = function(req, res) {
   const {id} = req.params;
-  const {result, userIndex} = getUser(id);
+  const {result, userIndex} = getUserById(id);
   if (result) {
     const deletedUser = deleteUser(userIndex);
     res.status(http.HTTP_STATUS_OK).json({
