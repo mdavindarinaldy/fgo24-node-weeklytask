@@ -77,7 +77,7 @@ exports.updateUser = function(req, res) {
         results: user,
       });
     } else {
-      res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+      res.status(http.HTTP_STATUS_CONFLICT).json({
         success: false,
         message: "Email sudah digunakan oleh user lain",
       });

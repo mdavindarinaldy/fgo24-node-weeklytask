@@ -37,7 +37,7 @@ exports.register = function(req, res) {
       result: responseUser
     });
   } else {
-    return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+    return res.status(http.HTTP_STATUS_CONFLICT).json({
       success: false,
       message: "Email sudah digunakan"
     });
