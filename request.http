@@ -1,0 +1,29 @@
+POST /auth/register
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "email":"davinda@mail.com",
+  "password":"yuhu"
+}
+
+###
+
+POST /auth/login
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "email":"davinda@mail.com",
+  "password":"yuhu"
+}
+
+###
+
+DELETE /users/1
+Host: localhost:8080
+
+###
+
+GET /users
+Host: localhost:8080
