@@ -2,43 +2,53 @@ let users = [
   {
     id:1,
     email:"huhu@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:2,
     email:"haha@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:3,
     email:"yuyu@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:4,
     email:"yahu@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:5,
     email:"enom@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:6,
     email:"hihi@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:7,
     email:"dini@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:8,
     email:"dana@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:9,
     email:"runmi@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }, {
     id:10,
     email:"dino@gmail.com",
-    password:"yahu"
+    password:"yahu",
+    profilePicture:null,
   }
 ];
 
@@ -46,16 +56,16 @@ exports.isExist = function(email) {
   return users.some((item)=> item.email === email);
 };
 
-exports.createUser = function(email, password) {
+exports.createUser = function(email, password, filename) {
   let userId;
   if (users.length > 0) {
     userId = users[users.length-1].id+1;
   } else {
     userId = 1;
   }
-  let user = {id: userId, email: email, password: password};
-  users = [...users, user];
-  return user;
+  let userModel = {id: userId, email: email, password: password, profilePicture: filename};
+  users = [...users, userModel];
+  return userModel;
 };
 
 exports.getUserByEmail = function(email, password) {

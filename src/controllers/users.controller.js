@@ -1,11 +1,13 @@
 const {constants: http} = require("http2");
 const { deleteUser, getAllUsers, updateUser, isExist, getUserById } = require("../models/users.model");
+const fs = require("fs");
+const path = require("path");
 
 exports.getUser = function(req, res) {
   const {id} = req.params;
   const {result, user} = getUserById(id);
   if (result) {
-    const responseUser = {id:user.id, email:user.email};
+    const responseUser = {id:user.id, email:user.email, profilePicture: user.profilePicture};
     res.status(http.HTTP_STATUS_OK).json({
       success: true,
       message: "Berhasil mendapatkan user",
@@ -49,18 +51,18 @@ exports.getAllUser = function(req, res) {
     totalPage: totalPage,
     currentPage: page,
     item: "Showing "+slicedUsers.length+" Of "+totalData, 
+    prevPage: prevLink,
+    nextPage: nextLink,
   };
 
   let message;
   if (slicedUsers.length>0) {
     message="Berhasil mendapatkan daftar user";
-    const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email});
+    const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email,profilePicture:item.profilePicture});
     res.status(http.HTTP_STATUS_OK).json({
       success: true,
       message: message,
       pageInfo: pageInfo,
-      prevPage: prevLink,
-      nextPage: nextLink,
       results: responseUsers,
     });
   }
@@ -76,10 +78,21 @@ exports.getAllUser = function(req, res) {
 exports.updateUser = function(req, res) {
   const {id} = req.params;
   const newData = req.body;
-  const {result, userIndex} = getUserById(id);
+  const filename = req.file ? req.file.filename : null;
+  const {result, userIndex, user:currentUser} = getUserById(id);
   if (result) {
     if (!isExist(newData.email)) {
-      const user = updateUser(userIndex, newData);
+      let user;
+      if (filename) {
+        if (currentUser.profilePicture) {
+          const filePath = path.join("uploads", "profile-picture", currentUser.profilePicture);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+        user = updateUser(userIndex, {...newData, profilePicture:filename});
+      }
+      else {user = updateUser(userIndex, newData);}
       res.status(http.HTTP_STATUS_OK).json({
         success: true,
         message: "Berhasil melakukan update data",
