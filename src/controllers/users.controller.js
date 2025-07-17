@@ -1,13 +1,13 @@
 const {constants: http} = require("http2");
-const { deleteUser, getAllUsers, updateUser, isExist, getUserById } = require("../models/users.model");
+const {User, Sequelize} = require("../models");
 const fs = require("fs");
 const path = require("path");
 
-exports.getUser = function(req, res) {
+exports.getUser = async function(req, res) {
   const {id} = req.params;
-  const {result, user} = getUserById(id);
-  if (result) {
-    const responseUser = {id:user.id, email:user.email, profilePicture: user.profilePicture};
+  const user = await User.findByPk(parseInt(id));
+  if (user) {
+    const responseUser = {id:user.id, email:user.email, picture: user.picture};
     res.status(http.HTTP_STATUS_OK).json({
       success: true,
       message: "Berhasil mendapatkan user",
@@ -21,24 +21,29 @@ exports.getUser = function(req, res) {
   }
 };
 
-exports.getAllUser = function(req, res) {
+exports.getAllUser = async function(req, res) {
   let search = req.query.search;
   let page = parseInt(req.query.page);
   let limit = parseInt(req.query.limit);
-  if (!search) {search="";}
+  if (!search) {search="";} else {search=search.toLowerCase();}
   if (!page) {page=1;}
   if (!limit) {limit=5;}
 
-  const filteredUsers = getAllUsers(search.toLowerCase());
+  const {count, rows} = await User.findAndCountAll({
+    where: {
+      email: {
+        [Sequelize.Op.iLike]: "%"+search+"%"
+      }
+    }
+  });
 
-  const totalData = filteredUsers.length;
-  const totalPage = Math.ceil(totalData/limit);
+  const totalPage = Math.ceil(count/limit);
   if (page>totalPage) { page=totalPage; }
 
   const startIndex = (page - 1) * limit;
   const lastIndex = (page * limit); 
 
-  const slicedUsers = filteredUsers.slice(startIndex, lastIndex);
+  const slicedUsers = rows.slice(startIndex, lastIndex);
   let nextLink, prevLink;
   if (page < totalPage) {
     nextLink = "localhost:8080/users?search="+search+"&page="+(page+1)+"&limit="+limit;
@@ -50,7 +55,7 @@ exports.getAllUser = function(req, res) {
   const pageInfo = {
     totalPage: totalPage,
     currentPage: page,
-    item: "Showing "+slicedUsers.length+" Of "+totalData, 
+    item: "Showing "+slicedUsers.length+" Of "+count, 
     prevPage: prevLink,
     nextPage: nextLink,
   };
@@ -58,7 +63,7 @@ exports.getAllUser = function(req, res) {
   let message;
   if (slicedUsers.length>0) {
     message="Berhasil mendapatkan daftar user";
-    const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email,profilePicture:item.profilePicture});
+    const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email,picture:item.picture});
     res.status(http.HTTP_STATUS_OK).json({
       success: true,
       message: message,
@@ -75,28 +80,56 @@ exports.getAllUser = function(req, res) {
   }
 };
 
-exports.updateUser = function(req, res) {
+exports.updateUser = async function(req, res) {
   const {id} = req.params;
   const newData = req.body;
   const filename = req.file ? req.file.filename : null;
-  const {result, userIndex, user:currentUser} = getUserById(id);
-  if (result) {
-    if (!isExist(newData.email)) {
-      let user;
+  const user = await User.findByPk(parseInt(id));
+  if (user) {
+    let found;
+    if (newData.email !== user.email) {
+      found = await User.findOne({where: {email:newData.email}});
+    }
+    if (!found) {
+      let userUpdate;
       if (filename) {
-        if (currentUser.profilePicture) {
-          const filePath = path.join("uploads", "profile-picture", currentUser.profilePicture);
+        if (user.picture) {
+          const filePath = path.join("uploads", "profile-picture", user.picture);
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
           }
         }
-        user = updateUser(userIndex, {...newData, profilePicture:filename});
+        userUpdate = await User.update(
+          {
+            ...newData,
+            picture:filename
+          },
+          {
+            where: {
+            id: parseInt(id),
+            },
+            returning: true,
+          }
+        );
       }
-      else {user = updateUser(userIndex, newData);}
+      else {
+        userUpdate = await User.update(
+        {
+          ...newData,
+        },
+        {
+          where: {
+            id: parseInt(id),
+          },
+          returning: true,
+        });
+      }
+      userUpdate = userUpdate[1][0];
+      const responseUser = {id:userUpdate.id,email:userUpdate.email,picture:userUpdate.picture};
       res.status(http.HTTP_STATUS_OK).json({
         success: true,
         message: "Berhasil melakukan update data",
-        results: user,
+        results: responseUser,
       });
     } else {
       res.status(http.HTTP_STATUS_CONFLICT).json({
@@ -112,18 +145,26 @@ exports.updateUser = function(req, res) {
   }
 };
 
-exports.deleteUser = function(req, res) {
+exports.deleteUser = async function(req, res) {
   const {id} = req.params;
-  const {result, userIndex} = getUserById(id);
-  if (result) {
-    const deletedUser = deleteUser(userIndex);
+  const user = await User.findByPk(parseInt(id));
+  if (user) {
+    if (user.picture) {
+      const filePath = path.join("uploads", "profile-picture", user.picture);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    await User.destroy({
+      where: {
+        id:parseInt(id)
+      }
+    });
+    const responseUser = {id:user.id,email:user.email,picture:user.picture};
     res.status(http.HTTP_STATUS_OK).json({
       success: true,
       message: "Berhasil menghapus user",
-      results: {
-        id: deletedUser[0].id,
-        email: deletedUser[0].email
-      }
+      results: responseUser
     });
   } else {
     res.status(http.HTTP_STATUS_NOT_FOUND).json({

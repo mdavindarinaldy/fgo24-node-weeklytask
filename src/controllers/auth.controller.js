@@ -1,12 +1,10 @@
 const {constants: http} = require("http2");
-const userModel = require("../models/users.model");
+const {User} = require("../models");
 const { validationResult } = require("express-validator");
 
-exports.login = function(req, res){
+exports.login = async function(req, res){
   const {email, password} = req.body;
-
   const validate = validationResult(req);
-
   if (!validate.isEmpty()) {
     return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
       success: false,
@@ -15,36 +13,29 @@ exports.login = function(req, res){
     });
   }
 
-  if(userModel.isExist(email)) {
-    const {result, user} = userModel.getUserByEmail(email, password);
-    const responseUser = {id: user.id, email: user.email};
-    if (result) {
-      return res.status(http.HTTP_STATUS_OK).json({
+  const found = await User.findOne({where: {email:email, password:password}});
+  if(found) {
+    const responseUser = {id: found.id, email: found.email, picture: found.picture};
+    return res.status(http.HTTP_STATUS_OK).json({
         success: true,
         message: "Berhasil login",
         result: responseUser
-      });
-    } else {
-      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
-        success: false,
-        message: "Password salah",
-      });
-    }
+    });
   } else {
     return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
       success: false,
-      message: "Email tidak terdaftar"
+      message: "Email atau password salah",
     });
   }
 };
 
-exports.register = function(req, res) {
+exports.register = async function(req, res) {
   const {email, password} = req.body;
   const filename = req.file ? req.file.filename : null;
-
-  if (!userModel.isExist(email)) {
-    const user = userModel.createUser(email, password, filename);
-    const responseUser = {id:user.id, email:user.email, profilePicture:user.profilePicture};
+  const found = await User.findOne({where: {email:email}});
+  if (!found) {
+    const user = await User.create({email: email, password: password, picture: filename});
+    const responseUser = {id:user.id, email:user.email, picture:user.picture};
     return res.status(http.HTTP_STATUS_CREATED).json({
       success: true,
       message: "User berhasil melakukan registrasi",
