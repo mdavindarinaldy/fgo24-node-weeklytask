@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "casts",
       });
 
-      Movie.hasMany(models.Showtime, {
+      Movie.hasMany(models.Showtimes, {
         foreignKey: "id_movie",
         as: "showtimes",
       });

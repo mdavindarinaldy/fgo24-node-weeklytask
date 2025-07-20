@@ -4,7 +4,7 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Cast extends Model {
     static associate(models) {
-      Cast.belongsToMany(models.Movies, {
+      Cast.belongsToMany(models.Movie, {
         through: "movies_casts",
         foreignKey: "id_cast",
         otherKey: "id_movie",
@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "Casts",
+      modelName: "Cast",
       tableName: "casts",
       timestamps: true,
       createdAt: "created_at",
