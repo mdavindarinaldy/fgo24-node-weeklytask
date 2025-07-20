@@ -3,6 +3,7 @@ const {sequelize, User, Profile} = require("../models");
 const { generateToken } = require("../utils/generateToken");
 const argon2 = require("argon2");
 const redis = require("../db/redis");
+const sendEmail = require("../utils/sendEmail");
 
 exports.login = async function(req, res){
   const { email, password } = req.body;
@@ -136,3 +137,50 @@ exports.logout = async function(req, res) {
     });
   }
 };
+
+exports.forgotPassword = async function(res, req) {
+  try {  
+    const { email } = req.body;
+    if (!email) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(http.HTTP_STATUS_OK).json({
+        success: false,
+        message: "Email is not registered!",
+      });
+    }
+
+    const otp = (Math.floor(Math.random() * 900) + 100).toString();
+    const redisKey = `/auth/otp/${user.id}`;
+    await redis.set(redisKey, otp, {
+      EX: 180,
+    });
+
+    const htmlBody = `<p>OTP to reset your password: </p><code>${otp}</code>`;
+    const emailResult = await sendEmail(email, "Reset Your Password", htmlBody);
+    if (!emailResult.success) {
+      return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Failed to send email",
+        error: emailResult.error,
+      });
+    }
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "OTP has been sent to your email and will expire within 3 minutes",
+    });
+  } catch(err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
