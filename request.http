@@ -3,51 +3,277 @@ Host: localhost:8080
 Content-Type: application/json
 
 {
-  "email":"davinda@mail.com",
-  "password":"yuhu"
+  "name":"sasa",
+  "email":"sasageyo@mailinator.com",
+  "phoneNumber": "08123125123",
+  "password":"yuhu123",
+  "confPass":"yuhu123"
 }
 
 ###
-
-POST /auth/register
-Host: localhost:8080
-Content-Type: application/json
-
-{
-  "email":"naldy@mail.com",
-  "password":"yuhu"
-}
-
-###
-
 POST /auth/login
 Host: localhost:8080
 Content-Type: application/json
 
 {
-  "email":"davinda@mail.com",
-  "password":"yuhu"
+  "email":"sasageyo@mailinator.com",
+  "password":"pass123"
 }
 
 ###
+POST /auth/logout
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InVzZXIiLCJpYXQiOjE3NTMwMDE5NTAsImV4cCI6MTc1MzA4ODM1MH0.NkZhvhQhJHrF6fNXXrQWaCoGlGdPKY6EyIEgcqgZBPY
 
-DELETE /users/10
+###
+PATCH /profile
+Host: localhost:8080
+Content-Type: multipart/form-data; boundary=----WebkitFormBoundary
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUzMDA1ODEzLCJleHAiOjE3NTMwOTIyMTN9.JI7tkxLte-SRQjO2nHcZQga0js86wH2hyHB0wvDLeBo
+
+------WebkitFormBoundary
+Content-Disposition: form-data; name="email"
+
+dav@mail.com
+------WebkitFormBoundary
+Content-Disposition: form-data; name="password"
+
+hai12345
+------WebkitFormBoundary
+Content-Disposition: form-data; name="profilePicture"; filename="any.png"
+Content-Type: image/png
+
+< ./kodok.png
+------WebkitFormBoundary--
+
+###
+POST /profile/check-password
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUzMDA1ODEzLCJleHAiOjE3NTMwOTIyMTN9.JI7tkxLte-SRQjO2nHcZQga0js86wH2hyHB0wvDLeBo
+
+{
+  "password":"hai12345"
+}
+
+###
+GET /profile
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUzMDA1ODEzLCJleHAiOjE3NTMwOTIyMTN9.JI7tkxLte-SRQjO2nHcZQga0js86wH2hyHB0wvDLeBo
+
+###
+POST /admin/genres
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+{
+  "name": "Action"
+}
+
+###
+GET /admin/genres
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+
+###
+POST /admin/directors
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+{
+  "name": "Christopher Nolan"
+}
+
+###
+GET /admin/directors
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+
+###
+POST /admin/casts
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+{
+  "name": "Leonardo DiCaprio"
+}
+
+###
+GET /admin/casts
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+###
+POST /admin/movies
+Host: localhost:8080
+Content-Type: multipart/form-data; boundary=----WebkitFormBoundary
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+------WebkitFormBoundary
+Content-Disposition: form-data; name="title"
+
+The Drama
+------WebkitFormBoundary
+Content-Disposition: form-data; name="synopsis"
+
+A thief who steals corporate secrets through dream-sharing technology.
+------WebkitFormBoundary
+Content-Disposition: form-data; name="releaseDate"
+
+2010-07-16
+------WebkitFormBoundary
+Content-Disposition: form-data; name="price"
+
+15000
+------WebkitFormBoundary
+Content-Disposition: form-data; name="runtime"
+
+148
+------WebkitFormBoundary
+Content-Disposition: form-data; name="genres"
+
+1
+------WebkitFormBoundary
+Content-Disposition: form-data; name="directors"
+
+1
+------WebkitFormBoundary
+Content-Disposition: form-data; name="casts"
+
+1
+------WebkitFormBoundary
+Content-Disposition: form-data; name="poster"; filename="any.png"
+Content-Type: image/png
+
+< ./kodok.png
+------WebkitFormBoundary
+Content-Disposition: form-data; name="backdrop"; filename="any.png"
+Content-Type: image/png
+
+< ./kodok.png
+------WebkitFormBoundary--
+
+###
+PATCH /admin/movies/9
+Host: localhost:8080
+Content-Type: multipart/form-data; boundary=----WebkitFormBoundary
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+------WebkitFormBoundary
+Content-Disposition: form-data; name="title"
+
+The Drama 1998
+------WebkitFormBoundary
+Content-Disposition: form-data; name="genres"
+
+1
+------WebkitFormBoundary
+Content-Disposition: form-data; name="directors"
+
+1
+------WebkitFormBoundary
+Content-Disposition: form-data; name="casts"
+
+1
+------WebkitFormBoundary
+Content-Disposition: form-data; name="poster"; filename="any.png"
+Content-Type: image/png
+
+< ./kodok.png
+------WebkitFormBoundary
+Content-Disposition: form-data; name="backdrop"; filename="any.png"
+Content-Type: image/png
+
+< ./kodok.png
+------WebkitFormBoundary--
+
+###
+DELETE /admin/movies/9
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+###
+GET /movies?search=&genre=action
 Host: localhost:8080
 
 ###
-
-GET /users?search=x
+GET /movies/7
 Host: localhost:8080
 
 ###
-GET /users/1
+GET /movies/upcoming
 Host: localhost:8080
 
 ###
-PATCH /users/1
+POST /admin/payment-methods
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+Content-Type: application/json
+
+{
+  "name": "OVO"
+}
+
+###
+GET  /transactions/payment-methods
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+###
+GET /transactions/seats?id_movie=7&cinema=hiflix&location=jakarta&date=2025-07-21&showtime=18:30:00
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+###
+POST /transactions
+Host: localhost:8080
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+{
+  "movieId": 7,
+  "paymentMethodId": 1,
+  "location": "jakarta",
+  "cinema": "hiflix",
+  "date": "2025-07-25",
+  "showtime": "18:30:00",
+  "seats": ["A5", "A7", "A6"]
+}
+
+###
+GET /transactions
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+###
+GET /admin/sales
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MzAxODAyMCwiZXhwIjoxNzUzMTA0NDIwfQ.ymvEgt3UDiPXBdL4OenTzXUnQxNQ9FNbBueixBRlpmo
+
+###
+POST /auth/pass
 Host: localhost:8080
 Content-Type: application/json
 
 {
-  "email":"yuhu@mail.com"
+  "email": "sasageyo@mailinator.com"
+}
+
+###
+PATCH /auth/pass
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "email": "sasageyo@mailinator.com",
+  "otp": "283",
+  "newPass": "pass123",
+  "confPass": "pass123"
 }
