@@ -15,7 +15,6 @@ module.exports = (sequelize, DataTypes) => {
   Cast.init(
     {
       name: DataTypes.STRING,
-      picture: DataTypes.STRING,
     },
     {
       sequelize,

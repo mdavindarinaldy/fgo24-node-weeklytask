@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   Director.init(
     {
       name: DataTypes.STRING,
-      profile_picture: DataTypes.STRING,
     },
     {
       sequelize,
