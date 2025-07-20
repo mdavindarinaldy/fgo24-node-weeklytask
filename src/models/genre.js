@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "Genre",
       tableName: "genres",
-      timestamps: false,
+      timestamps: true,
       underscored: true,
     }
   );

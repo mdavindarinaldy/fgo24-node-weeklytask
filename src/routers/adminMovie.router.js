@@ -5,5 +5,7 @@ adminMovieRouter.post("/directors", adminMovieController.addDirector);
 adminMovieRouter.get("/directors", adminMovieController.getDirector);
 adminMovieRouter.post("/casts", adminMovieController.addCast);
 adminMovieRouter.get("/casts", adminMovieController.getCast);
+adminMovieRouter.post("/genres", adminMovieController.addGenre);
+adminMovieRouter.get("/genres", adminMovieController.getGenre);
 
 module.exports = adminMovieRouter;

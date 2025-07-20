@@ -1,5 +1,5 @@
 const {constants: http} = require("http2");
-const {Director, Cast} = require("../models");
+const {Director, Cast, Genre} = require("../models");
 const {Op} = require("sequelize");
 
 exports.addDirector = async function (req, res) {
@@ -140,4 +140,65 @@ exports.getCast = async function (req, res) {
   }
 };
 
+exports.addGenre = async function (req, res) {
+  try {
+    if (req.role !== "admin") {
+      return res.status(http.HTTP_STATUS_FORBIDDEN).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
 
+    const { name } = req.body;
+    if (!name || name.trim() === "") {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Genre name should not be empty",
+      });
+    }
+
+    const newGenre = await Genre.create({ name });
+    return res.status(http.HTTP_STATUS_CREATED).json({
+      success: true,
+      message: "Success to add new genre",
+      result: {
+        id: newGenre.id,
+        name: newGenre.name,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getGenre = async function (req, res) {
+  try {
+    if (req.role !== "admin") {
+      return res.status(http.HTTP_STATUS_FORBIDDEN).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const genres = await Genre.findAll({
+      attributes: ["id", "name"],
+      order: [["id", "ASC"]],
+    });
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Success to get genres list",
+      result: genres,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
