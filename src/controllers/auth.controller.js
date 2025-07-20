@@ -138,7 +138,7 @@ exports.logout = async function(req, res) {
   }
 };
 
-exports.forgotPassword = async function(res, req) {
+exports.forgotPassword = async function(req, res) {
   try {  
     const { email } = req.body;
     if (!email) {
