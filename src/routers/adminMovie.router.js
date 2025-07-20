@@ -1,8 +1,9 @@
 const adminMovieRouter = require("express").Router();
 const adminMovieController = require("../controllers/adminMovie.controller");
-const verifyToken = require("../middlewares/verifyToken.middleware");
 
-adminMovieRouter.post("/directors", verifyToken, adminMovieController.addDirector);
-adminMovieRouter.get("/directors", verifyToken, adminMovieController.getDirector);
+adminMovieRouter.post("/directors", adminMovieController.addDirector);
+adminMovieRouter.get("/directors", adminMovieController.getDirector);
+adminMovieRouter.post("/casts", adminMovieController.addCast);
+adminMovieRouter.get("/casts", adminMovieController.getCast);
 
 module.exports = adminMovieRouter;
