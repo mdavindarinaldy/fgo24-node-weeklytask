@@ -1,82 +1,43 @@
 const {constants: http} = require("http2");
-const {User, Sequelize, Profile, sequelize} = require("../models");
+const {User, Profile, sequelize} = require("../models");
 const fs = require("fs");
 const path = require("path");
 const argon2 = require("argon2");
 
 exports.getUser = async function(req, res) {
-  const {id} = req.params;
-  const user = await User.findByPk(parseInt(id));
-  if (user) {
-    const responseUser = {id:user.id, email:user.email, picture: user.picture};
-    res.status(http.HTTP_STATUS_OK).json({
-      success: true,
-      message: "Berhasil mendapatkan user",
-      results: responseUser,
+  try {
+    const userId = req.userId;
+    const user = await User.findByPk(userId, {
+      include: {
+        model: Profile,
+        attributes: ["name", "phone_number", "profile_picture"],
+      },
+      attributes: ["email", "role"],
     });
-  } else {
-    res.status(http.HTTP_STATUS_NOT_FOUND).json({
-      success: false,
-      message: "User tidak ditemukan",
-    });
-  }
-};
 
-exports.getAllUser = async function(req, res) {
-  let search = req.query.search;
-  let page = parseInt(req.query.page);
-  let limit = parseInt(req.query.limit);
-  if (!search) {search="";} else {search=search.toLowerCase();}
-  if (!page) {page=1;}
-  if (!limit) {limit=5;}
-
-  const {count, rows} = await User.findAndCountAll({
-    where: {
-      email: {
-        [Sequelize.Op.iLike]: "%"+search+"%"
-      }
+    if (!user || !user.Profile) {
+      return res.status(http.HTTP_STATUS_NOT_FOUND).json({
+        success: false,
+        message: "User not found",
+      });
     }
-  });
 
-  const totalPage = Math.ceil(count/limit);
-  if (page>totalPage) { page=totalPage; }
-
-  const startIndex = (page - 1) * limit;
-  const lastIndex = (page * limit); 
-
-  const slicedUsers = rows.slice(startIndex, lastIndex);
-  let nextLink, prevLink;
-  if (page < totalPage) {
-    nextLink = "localhost:8080/users?search="+search+"&page="+(page+1)+"&limit="+limit;
-  } else { nextLink = null; }
-  if (page > 1 ) {
-    prevLink = "localhost:8080/users?search="+search+"&page="+(page-1)+"&limit="+limit;
-  } else { prevLink = null; }
-
-  const pageInfo = {
-    totalPage: totalPage,
-    currentPage: page,
-    item: "Showing "+slicedUsers.length+" Of "+count, 
-    prevPage: prevLink,
-    nextPage: nextLink,
-  };
-
-  let message;
-  if (slicedUsers.length>0) {
-    message="Berhasil mendapatkan daftar user";
-    const responseUsers = slicedUsers?.map((item)=> item={id:item.id,email: item.email,picture:item.picture});
-    res.status(http.HTTP_STATUS_OK).json({
+    return res.status(http.HTTP_STATUS_OK).json({
       success: true,
-      message: message,
-      pageInfo: pageInfo,
-      results: responseUsers,
+      message: "Success to get user's profile",
+      result: {
+        email: user.email,
+        role: user.role,
+        name: user.Profile.name,
+        phone_number: user.Profile.phone_number,
+        profile_picture: user.Profile.profile_picture,
+      },
     });
-  }
-  else {
-    message="Tidak ada user yang ditemukan";
-    res.status(http.HTTP_STATUS_NOT_FOUND).json({
-      success: true,
-      message: message,
+  } catch(err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error",
     });
   }
 };
@@ -206,35 +167,6 @@ exports.confirmPassword = async function(req, res) {
       success: false,
       message: "Internal Server Error",
       result: false,
-    });
-  }
-};
-
-exports.deleteUser = async function(req, res) {
-  const {id} = req.params;
-  const user = await User.findByPk(parseInt(id));
-  if (user) {
-    if (user.picture) {
-      const filePath = path.join("uploads", "profile-picture", user.picture);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-    await User.destroy({
-      where: {
-        id:parseInt(id)
-      }
-    });
-    const responseUser = {id:user.id,email:user.email,picture:user.picture};
-    res.status(http.HTTP_STATUS_OK).json({
-      success: true,
-      message: "Berhasil menghapus user",
-      results: responseUser
-    });
-  } else {
-    res.status(http.HTTP_STATUS_NOT_FOUND).json({
-      success: false,
-      message: "User tidak ditemukan",
     });
   }
 };

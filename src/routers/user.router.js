@@ -24,9 +24,7 @@ const profilePicture = multer({storage});
 
 const userController = require("../controllers/users.controller");
 
-userRouter.get("", userController.getAllUser);
-userRouter.get("/:id", userController.getUser);
-
+userRouter.get("/", userController.getUser);
 userRouter.post("/check-password", userController.confirmPassword);
 userRouter.patch("", profilePicture.single("profilePicture"), userController.updateUser);
 
