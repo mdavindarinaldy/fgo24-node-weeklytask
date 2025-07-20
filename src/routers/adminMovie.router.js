@@ -44,5 +44,6 @@ adminMovieRouter.get("/casts", adminMovieController.getCast);
 adminMovieRouter.post("/genres", adminMovieController.addGenre);
 adminMovieRouter.get("/genres", adminMovieController.getGenre);
 adminMovieRouter.post("/movies", upload.fields([{ name: "poster", maxCount: 1 }, { name: "backdrop", maxCount: 1 }]), addMovieValidation, handleValidation, adminMovieController.addMovie);
+adminMovieRouter.patch("/movies/:id", upload.fields([{ name: "poster", maxCount: 1 }, { name: "backdrop", maxCount: 1 }]), adminMovieController.updateMovie);
 
 module.exports = adminMovieRouter;

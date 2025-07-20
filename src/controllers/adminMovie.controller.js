@@ -1,5 +1,8 @@
 const {constants: http} = require("http2");
 const {Director, Cast, Genre, Movie, sequelize} = require("../models");
+const {Movies_Genres, Movies_Directors, Movies_Casts} = require("../models");
+const fs = require("fs");
+const path = require("path");
 const {Op} = require("sequelize");
 const redis = require("../db/redis");
 
@@ -280,6 +283,108 @@ exports.addMovie = async (req, res) => {
     return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message,
+    });
+  }
+};
+
+exports.updateMovie = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const movieId = req.params.id;
+    const {
+      title, synopsis, releaseDate, price, runtime,
+      genres, directors, casts
+    } = req.body;
+
+    const movie = await Movie.findByPk(movieId);
+    if (!movie) {
+      return res.status(http.HTTP_STATUS_NOT_FOUND).json({ 
+        success: false, 
+        message: "Movie not found" 
+      });
+    }
+    const updatedData = {
+      ...(title && { title }),
+      ...(synopsis && { synopsis }),
+      ...(releaseDate && { releaseDate }),
+      ...(price && { price }),
+      ...(runtime && { runtime }),
+      updatedAt: new Date()
+    };
+
+    if (req.files?.poster?.[0]) {
+      const newPoster = req.files.poster[0].filename;
+      if (movie.poster) {
+        const oldPosterPath = path.join("uploads", "poster", movie.poster);
+        if (fs.existsSync(oldPosterPath)) {
+          fs.unlinkSync(oldPosterPath);
+        }
+      }
+      updatedData.poster = newPoster;
+    }
+
+    if (req.files?.backdrop?.[0]) {
+      const newBackdrop = req.files.backdrop[0].filename;
+      if (movie.backdrop) {
+        const oldBackdropPath = path.join("uploads", "backdrop", movie.backdrop);
+        if (fs.existsSync(oldBackdropPath)) {
+          fs.unlinkSync(oldBackdropPath);
+        }
+      }
+      updatedData.backdrop = newBackdrop;
+    }
+
+    await Movie.update(updatedData, { 
+      where: { id: movieId },
+      transaction: t
+     });
+
+    if (genres) {
+      await Movies_Genres.destroy({ where: { id_movie: movieId } });
+      const genreIds = genres.split(", ").map(id => ({ 
+        id_genre: id, 
+        id_movie: movieId 
+      }));
+      await Movies_Genres.bulkCreate(genreIds, { transaction: t });
+    }
+    if (directors) {
+      await Movies_Directors.destroy({ where: { id_movie: movieId } });
+      const directorIds = directors.split(", ").map(id => ({ 
+        id_director: id, 
+        id_movie: movieId 
+      }));
+      await Movies_Directors.bulkCreate(directorIds, { transaction: t });
+    }
+    if (casts) {
+      await Movies_Casts.destroy({ where: { id_movie: movieId } });
+      const castIds = casts.split(", ").map(id => ({ 
+        id_cast: id, 
+        id_movie: movieId 
+      }));
+      await Movies_Casts.bulkCreate(castIds, { transaction: t });
+    }
+
+    await t.commit();
+
+    const createdMovie = await Movie.findByPk(movieId, {
+      include: [
+        { model: Genre, as: "genres", through: { attributes: [] } },
+        { model: Director, as: "directors", through: { attributes: [] } },
+        { model: Cast, as: "casts", through: { attributes: [] } },
+      ]
+    });
+
+    res.status(http.HTTP_STATUS_OK).json({ 
+      success: true, 
+      message: "Movie updated successfully",
+      results: createdMovie
+    });
+  } catch(err) {
+    await t.rollback();
+    console.error(err);
+    res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
+      success: false, 
+      message: "Internal server error" 
     });
   }
 };
