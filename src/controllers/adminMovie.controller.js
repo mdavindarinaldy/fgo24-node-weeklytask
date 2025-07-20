@@ -1,6 +1,7 @@
 const {constants: http} = require("http2");
-const {Director, Cast, Genre} = require("../models");
+const {Director, Cast, Genre, Movie, sequelize} = require("../models");
 const {Op} = require("sequelize");
+const redis = require("../db/redis");
 
 exports.addDirector = async function (req, res) {
   try {
@@ -199,6 +200,86 @@ exports.getGenre = async function (req, res) {
     return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+exports.addMovie = async (req, res) => {
+  const role = req.role;
+  const userId = req.userId;
+
+  if (role !== "admin") {
+    return res.status(http.HTTP_STATUS_FORBIDDEN).json({
+      success: false,
+      message: "Forbidden",
+    });
+  }
+
+  const {
+    title, synopsis, releaseDate, price, runtime,
+    genres, directors, casts
+  } = req.body;
+
+  const poster = req.files?.poster?.[0]?.filename;
+  const backdrop = req.files?.backdrop?.[0]?.filename;
+
+  if (!poster || !backdrop) {
+    return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+      success: false,
+      message: "Poster and backdrop should not be empty",
+    });
+  }
+
+  const now = new Date();
+  const t = await sequelize.transaction();
+  try {
+    const movie = await Movie.create({
+      title,
+      synopsis,
+      release_date: releaseDate,
+      price,
+      runtime,
+      poster,
+      backdrop,
+      created_by: userId,
+      created_at: now,
+      updated_at: now
+    }, { transaction: t });
+
+    await movie.addGenres(genres.split(", ").map(id => parseInt(id)), { transaction: t });
+    await movie.addDirectors(directors.split(", ").map(id => parseInt(id)), { transaction: t });
+    await movie.addCasts(casts.split(", ").map(id => parseInt(id)), { transaction: t });
+
+    await t.commit();
+
+    try {
+      const keys = await redis.keys("/movies?*");
+      if (keys.length > 0) {
+        await redis.del(...keys);
+      }
+      await redis.del("/movies/upcoming");
+    } catch (err) {
+      console.error(err.message);
+    }
+
+    const createdMovie = await Movie.findByPk(movie.id, {
+      include: [
+        { model: Genre, as: "genres", through: { attributes: [] } },
+        { model: Director, as: "directors", through: { attributes: [] } },
+        { model: Cast, as: "casts", through: { attributes: [] } },
+      ]
+    });
+
+    return res.status(http.HTTP_STATUS_CREATED).json({
+      success: true,
+      message: "Success to add new movie",
+      results: createdMovie
+    });
+  } catch (err) {
+    await t.rollback();
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: err.message,
     });
   }
 };

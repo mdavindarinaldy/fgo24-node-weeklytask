@@ -12,24 +12,27 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       Movie.belongsToMany(models.Genre, {
-        through: "movies_genres",
+        through: models.Movies_Genres,
         foreignKey: "id_movie",
         otherKey: "id_genre",
         as: "genres",
+        timestamps: false
       });
 
       Movie.belongsToMany(models.Director, {
-        through: "movies_directors",
+        through: models.Movies_Directors,
         foreignKey: "id_movie",
         otherKey: "id_director",
         as: "directors",
+        timestamps: false
       });
 
       Movie.belongsToMany(models.Cast, {
-        through: "movies_casts",
+        through: models.Movies_Casts,
         foreignKey: "id_movie",
         otherKey: "id_cast",
         as: "casts",
+        timestamps: false
       });
 
       Movie.hasMany(models.Showtimes, {
@@ -49,6 +52,14 @@ module.exports = (sequelize, DataTypes) => {
       poster: DataTypes.STRING,
       backdrop: DataTypes.STRING,
       created_by: DataTypes.INTEGER,
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+      }
     },
     {
       sequelize,
