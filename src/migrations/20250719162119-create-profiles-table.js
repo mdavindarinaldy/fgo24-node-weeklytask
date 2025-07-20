@@ -1,28 +1,36 @@
 "use strict";
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.sequelize.query("CREATE TYPE \"enum_users_role\" AS ENUM ('user', 'admin');");
-
-    await queryInterface.createTable("users", {
+    await queryInterface.createTable("profiles", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      email: {
+      id_user: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        unique: true,
+        references: {
+          model: "users",
+          key: "id"
+        },
+        onDelete: "CASCADE"
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      phone_number: {
         type: Sequelize.STRING,
         allowNull: false,
         unique: true
       },
-      password: {
-        type: Sequelize.TEXT,
-        allowNull: false
-      },
-      role: {
-        type: "enum_users_role",
-        allowNull: false
+      profile_picture: {
+        type: Sequelize.STRING
       },
       created_at: {
         allowNull: false,
@@ -36,7 +44,6 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable("users");
-    await queryInterface.sequelize.query("DROP TYPE \"enum_users_role\";");
+    await queryInterface.dropTable("profiles");
   }
 };
