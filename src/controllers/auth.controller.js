@@ -2,6 +2,7 @@ const {constants: http} = require("http2");
 const {sequelize, User, Profile} = require("../models");
 const { generateToken } = require("../utils/generateToken");
 const argon2 = require("argon2");
+const redis = require("../db/redis");
 
 exports.login = async function(req, res){
   const { email, password } = req.body;
@@ -97,6 +98,41 @@ exports.register = async function(req, res) {
     return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+exports.logout = async function(req, res) {
+  try {
+    const token = req.headers.authorization?.split("Bearer ")[1];
+    if (!token) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Missing or invalid token",
+      });
+    }
+
+    const tokenExp = req.tokenExp;
+    const now = Math.floor(Date.now() / 1000);
+    const durationInSeconds = tokenExp - now;
+
+    if (durationInSeconds <= 0) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Token already expired",
+      });
+    }
+
+    await redis.setex(`blacklist:${token}`, durationInSeconds, "true");
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Successfully logged out",
+    });
+  // eslint-disable-next-line no-unused-vars
+  } catch (error) {
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to logout",
     });
   }
 };
