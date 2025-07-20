@@ -189,3 +189,74 @@ exports.getMovieDetail = async (req, res) => {
     });
   }
 };
+
+exports.getUpcomingMovies = async (req, res) => {
+  try {
+    const redisKey = "/movies/upcoming";
+    const cache = await redis.get(redisKey);
+
+    if (cache) {
+      return res.status(http.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Success to get data (from cache)",
+        result: JSON.parse(cache),
+      });
+    }
+
+    const movies = await Movie.findAll({
+      where: {
+        release_date: {
+          [Op.gt]: new Date(),
+        },
+      },
+      include: [
+        {
+          model: Genre,
+          as: "genres",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+        {
+          model: Director,
+          as: "directors",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+        {
+          model: Cast,
+          as: "casts",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    const formattedMovies = movies.map((movie) => ({
+      id: movie.id,
+      title: movie.title,
+      synopsis: movie.synopsis,
+      release_date: movie.release_date,
+      price: movie.price,
+      runtime: movie.runtime,
+      poster: movie.poster,
+      backdrop: movie.backdrop,
+      genres: movie.Genres?.map((g) => g.name).join(", "),
+      directors: movie.Directors?.map((d) => d.name).join(", "),
+      casts: movie.Casts?.map((c) => c.name).join(", "),
+    }));
+
+    await redis.set(redisKey, JSON.stringify(formattedMovies));
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Success to get data",
+      result: formattedMovies,
+    });
+  } catch(err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to get upcoming movies",
+    });
+  }
+};
