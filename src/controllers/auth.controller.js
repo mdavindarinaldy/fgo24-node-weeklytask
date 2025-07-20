@@ -31,23 +31,7 @@ exports.login = async function(req, res){
 };
 
 exports.register = async function(req, res) {
-  const { name, email, phoneNumber, password, confPass } = req.body;
-  if (!name || !email || !phoneNumber || !password || !confPass) {
-    return res.status(400).json({
-      success: false,
-      message: "Failed to register user",
-      errors: "user data should not be empty",
-    });
-  }
-
-  if (password !== confPass) {
-    return res.status(400).json({
-      success: false,
-      message: "Failed to register user",
-      errors: "password and confirm password doesn't match",
-    });
-  }
-
+  const { name, email, phoneNumber, password } = req.body;
   try {
     const hashedPassword = await argon2.hash(password);
     await sequelize.transaction(async (t) => {

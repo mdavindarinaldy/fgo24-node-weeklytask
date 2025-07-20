@@ -1,6 +1,7 @@
 const authRouter = require("express").Router();
 const authContoller = require("../controllers/auth.controller");
-const authDto = require("../dto/auth.dto");
+const { registerValidation, loginValidation } = require("../utils/validation");
+const { handleValidation } = require("../middlewares/validation.middleware");
 // const path = require("node:path");
 // const multer = require("multer");
 // const {v4: uuid} = require("uuid");
@@ -17,8 +18,8 @@ const authDto = require("../dto/auth.dto");
 // });
 // const profilePicture = multer({storage});
 
-authRouter.post("/login", authDto.login, authContoller.login);
+authRouter.post("/login", loginValidation, handleValidation, authContoller.login);
 // authRouter.post("/register", profilePicture.single("picture"), authContoller.register);
-authRouter.post("/register", authContoller.register);
+authRouter.post("/register", registerValidation, handleValidation, authContoller.register);
 
 module.exports = authRouter;
