@@ -1,6 +1,7 @@
 const { Payment_Methods, Showtimes, Transaction_Detail, Movie, Transactions, sequelize } = require("../models");
 const { constants: http } = require("http2");
 const { Sequelize } = require("sequelize");
+const redis = require("../db/redis");
 
 exports.getPaymentMethods = async (req, res) => {
   try {
@@ -179,6 +180,7 @@ exports.addTransaction = async (req, res) => {
     await Transaction_Detail.bulkCreate(trxDetailPayload, { transaction: t });
 
     await t.commit();
+    await redis.del(`/transactions/:${userId}`);
     return res.status(201).json({
       success: true,
       message: "Success to order ticket",
@@ -196,6 +198,62 @@ exports.addTransaction = async (req, res) => {
         errors: "Seat(s) are already taken"
       });
     }
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+exports.getTransactionsHistory = async (req, res) => {
+  const userId = req.userId;
+  const redisKey = `/transactions/:${userId}`;
+  const cached = await redis.get(redisKey);
+  if (cached) {
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Success to get data (from cache)",
+      result: JSON.parse(cached)
+    });
+  }
+
+  try {
+    const result = await Transactions.findAll({
+      where: { id_user: userId },
+      include: [{
+        model: Transaction_Detail,
+        include: [{
+          model: Showtimes,
+          include: [Movie]
+        }]
+      }],
+      order: [["created_at", "DESC"]]
+    });
+
+    const history = result.map(trx => {
+      const showtime = trx.Transaction_Details[0]?.Showtime;
+      const movie = showtime?.Movie;
+      return {
+        movieId: movie?.id,
+        movieTitle: movie?.title,
+        location: showtime?.location,
+        cinema: showtime?.cinema,
+        date: showtime?.date,
+        showtime: showtime?.showtime,
+        showtimeId: showtime?.id,
+        transactionId: trx.id,
+        seats: trx.Transaction_Details.map(td => td.seat).join(", ")
+      };
+    });
+
+    await redis.set(redisKey, JSON.stringify(history));
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Success to get data",
+      result: history
+    });
+  } catch(err) {
     console.error(err);
     return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
