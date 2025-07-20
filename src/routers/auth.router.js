@@ -8,5 +8,6 @@ authRouter.post("/login", loginValidation, handleValidation, authContoller.login
 authRouter.post("/register", registerValidation, handleValidation, authContoller.register);
 authRouter.post("/logout", verifyToken, authContoller.logout);
 authRouter.post("/pass", authContoller.forgotPassword);
+authRouter.patch("/pass", authContoller.resetPassword);
 
 module.exports = authRouter;

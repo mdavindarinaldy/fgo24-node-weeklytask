@@ -158,9 +158,7 @@ exports.forgotPassword = async function(req, res) {
 
     const otp = (Math.floor(Math.random() * 900) + 100).toString();
     const redisKey = `/auth/otp/${user.id}`;
-    await redis.set(redisKey, otp, {
-      EX: 180,
-    });
+    await redis.set(redisKey, otp, "EX", 180);
 
     const htmlBody = `<p>OTP to reset your password: </p><code>${otp}</code>`;
     const emailResult = await sendEmail(email, "Reset Your Password", htmlBody);
@@ -174,6 +172,63 @@ exports.forgotPassword = async function(req, res) {
     return res.status(http.HTTP_STATUS_OK).json({
       success: true,
       message: "OTP has been sent to your email and will expire within 3 minutes",
+    });
+  } catch(err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.resetPassword = async function(req, res) {
+  const { email, otp, newPass, confPass } = req.body;
+  if (!email || !otp || !newPass || !confPass) {
+    return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Email not found",
+      });
+    }
+
+    const redisKey = `/auth/otp/${user.id}`;
+    const storedOTP = await redis.get(redisKey);
+    if (!storedOTP || storedOTP !== otp) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "OTP is wrong or already expired!",
+      });
+    }
+
+    if (newPass !== confPass) {
+      return res.status(http.constants.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Password and confirm password do not match",
+      });
+    }
+
+    const hashedPassword = await argon2.hash(newPass);
+    await user.update(
+      { password: hashedPassword },
+      { where: { id: user.id } }
+    );
+
+    await redis.del(redisKey);
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Password successfully reset",
+      result: {
+        email: user.email,
+      },
     });
   } catch(err) {
     console.error(err);
