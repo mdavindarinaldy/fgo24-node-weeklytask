@@ -12,5 +12,6 @@ adminMovieRouter.post("/genres", adminMovieController.addGenre);
 adminMovieRouter.get("/genres", adminMovieController.getGenre);
 adminMovieRouter.post("/movies", safeUpload, addMovieValidation, handleValidation, adminMovieController.addMovie);
 adminMovieRouter.patch("/movies/:id", safeUpload, adminMovieController.updateMovie);
+adminMovieRouter.delete("/movies/:id", adminMovieController.deleteMovie);
 
 module.exports = adminMovieRouter;

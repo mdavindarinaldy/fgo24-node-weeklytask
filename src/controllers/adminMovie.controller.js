@@ -288,6 +288,14 @@ exports.addMovie = async (req, res) => {
 };
 
 exports.updateMovie = async (req, res) => {
+  const role = req.role;
+  if (role !== "admin") {
+    return res.status(http.HTTP_STATUS_FORBIDDEN).json({
+      success: false,
+      message: "Forbidden",
+    });
+  }
+
   const t = await sequelize.transaction();
   try {
     const movieId = req.params.id;
@@ -385,6 +393,64 @@ exports.updateMovie = async (req, res) => {
     res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ 
       success: false, 
       message: "Internal server error" 
+    });
+  }
+};
+
+exports.deleteMovie = async (req, res) => {
+  const role = req.role;
+  if (role !== "admin") {
+    return res.status(http.HTTP_STATUS_FORBIDDEN).json({
+      success: false,
+      message: "Forbidden",
+    });
+  }
+
+  try {
+    const movieId = parseInt(req.params.id);
+    const movie = await Movie.findByPk(movieId);
+    if (!movie) {
+      return res.status(http.HTTP_STATUS_NOT_FOUND).json({ 
+        success: false, 
+        message: "Movie not found" 
+      });
+    }
+    if (movie.poster) {
+      const oldPosterPath = path.join("uploads", "poster", movie.poster);
+      if (fs.existsSync(oldPosterPath)) {
+        fs.unlinkSync(oldPosterPath);
+      }
+    }
+    if (movie.backdrop) {
+      const oldBackdropPath = path.join("uploads", "backdrop", movie.backdrop);
+      if (fs.existsSync(oldBackdropPath)) {
+        fs.unlinkSync(oldBackdropPath);
+      } 
+    }
+
+    const deletedMovie = movie.toJSON();
+    await Movie.destroy({
+      where: {
+        id: movieId
+      }
+    });
+    const keys = await redis.keys("/movies?*");
+    if (keys.length > 0) {
+      await redis.del(keys);
+    }
+    await redis.del(`/movies/${movieId}`);    
+    await redis.del("/movies/upcoming"); 
+
+    return res.status(http.HTTP_STATUS_OK).json({ 
+      success: true, 
+      message: "Delete movie success",
+      results:  deletedMovie
+    });   
+  } catch (err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_OK).json({ 
+      success: false, 
+      message: "Failed to delete movie" 
     });
   }
 };
