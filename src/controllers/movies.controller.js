@@ -115,3 +115,77 @@ exports.getMovies = async (req, res) => {
     });
   }
 };
+
+exports.getMovieDetail = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const redisKey = `/movies/:${id}`;
+
+    const cache = await redis.get(redisKey);
+    if (cache) {
+      return res.status(http.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Success to get data (from cache)",
+        result: JSON.parse(cache),
+      });
+    }
+
+    const movie = await Movie.findOne({
+      where: { id },
+      include: [
+        {
+          model: Genre,
+          as: "genres",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+        {
+          model: Director,
+          as: "directors",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+        {
+          model: Cast,
+          as: "casts",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    if (!movie) {
+      return res.status(http.HTTP_STATUS_NOT_FOUND).json({
+        success: false,
+        message: "Movie not found",
+      });
+    }
+
+    const formattedMovie = {
+      id: movie.id,
+      title: movie.title,
+      synopsis: movie.synopsis,
+      release_date: movie.release_date,
+      price: movie.price,
+      runtime: movie.runtime,
+      poster: movie.poster,
+      backdrop: movie.backdrop,
+      genres: movie.Genres?.map((g) => g.name).join(", "),
+      directors: movie.Directors?.map((d) => d.name).join(", "),
+      casts: movie.Casts?.map((c) => c.name).join(", "),
+    };
+
+    await redis.set(redisKey, JSON.stringify(formattedMovie));
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Success to get data",
+      result: formattedMovie,
+    });
+  } catch(err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to get movie detail",
+    });
+  }
+};
