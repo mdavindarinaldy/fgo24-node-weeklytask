@@ -1,6 +1,6 @@
 const authRouter = require("express").Router();
 const authContoller = require("../controllers/auth.controller");
-const { registerValidation, loginValidation } = require("../utils/validation");
+const { registerValidation, loginValidation } = require("../utils/validations");
 const { handleValidation } = require("../middlewares/validation.middleware");
 // const path = require("node:path");
 // const multer = require("multer");
