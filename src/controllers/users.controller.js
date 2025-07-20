@@ -2,6 +2,7 @@ const {constants: http} = require("http2");
 const {User, Sequelize, Profile, sequelize} = require("../models");
 const fs = require("fs");
 const path = require("path");
+const argon2 = require("argon2");
 
 exports.getUser = async function(req, res) {
   const {id} = req.params;
@@ -108,6 +109,11 @@ exports.updateUser = async function(req, res) {
       }
     }
 
+    let hashedPassword = null;
+    if (newData.password && newData.password.trim() !== "") {
+      hashedPassword = await argon2.hash(newData.password);
+    }
+
     const profile = await Profile.findOne({
       where: { id_user: id },
       transaction: t,
@@ -124,6 +130,7 @@ exports.updateUser = async function(req, res) {
     await User.update(
       {
         email: newData.email || user.email,
+        password: hashedPassword || user.password,
         updated_at: new Date(),
       },
       { where: { id }, transaction: t }
@@ -162,6 +169,43 @@ exports.updateUser = async function(req, res) {
     return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Failed to update user's data",
+    });
+  }
+};
+
+exports.confirmPassword = async function(req, res) {
+  try {
+    const userId = req.userId;
+    const { password } = req.body;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(http.HTTP_STATUS_UNAUTHORIZED).json({
+        success: false,
+        message: "User not found",
+        result: false,
+      });
+    }
+
+    const isMatch = await argon2.verify(user.password, password);
+    if (!isMatch) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Wrong password",
+        result: false,
+      });
+    }
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Password is confirmed",
+      result: true,
+    });
+  } catch(err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error",
+      result: false,
     });
   }
 };
