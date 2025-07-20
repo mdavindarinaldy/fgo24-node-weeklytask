@@ -28,3 +28,14 @@ exports.loginValidation = [
   body("password")
     .notEmpty().withMessage("Password is required")
 ];
+
+exports.addMovieValidation = [
+  body("title").notEmpty().withMessage("Title is required"),
+  body("synopsis").notEmpty().withMessage("Synopsis is required"),
+  body("releaseDate").notEmpty().withMessage("Release date is required"),
+  body("price").notEmpty().withMessage("Price is required"),
+  body("runtime").notEmpty().withMessage("Runtime is required"),
+  body("genres").notEmpty().withMessage("Genres are required"),
+  body("directors").notEmpty().withMessage("Directors are required"),
+  body("casts").notEmpty().withMessage("Casts are required"),
+];
