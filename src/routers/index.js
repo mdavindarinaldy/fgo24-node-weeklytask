@@ -7,5 +7,6 @@ routers.use("/profile", verifyToken, require("./user.router"));
 routers.use("/admin", verifyToken, require("./adminMovie.router"));
 routers.use("/admin", verifyToken, require("./adminTransaction.router"));
 routers.use("/movies", require("./movie.router"));
+routers.use("/transactions", require("./transaction.router"));
 
 module.exports = routers;
