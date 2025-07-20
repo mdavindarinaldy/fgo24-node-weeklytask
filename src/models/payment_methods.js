@@ -13,7 +13,6 @@ module.exports = (sequelize, DataTypes) => {
   Payment_Methods.init(
     {
       name: DataTypes.STRING,
-      logo: DataTypes.STRING,
     },
     {
       sequelize,
