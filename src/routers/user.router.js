@@ -2,10 +2,17 @@ const userRouter = require("express").Router();
 const path = require("node:path");
 const multer = require("multer");
 const {v4: uuid} = require("uuid");
+const fs = require("fs");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb)=> {
-    cb(null, path.join("uploads","profile-picture"));
+    const dir = path.join("uploads", "profile-picture");
+    
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    cb(null, dir);
   },
   filename: (req, file, cb)=>{
     const ext = path.extname(file.originalname);
@@ -20,6 +27,6 @@ const userController = require("../controllers/users.controller");
 userRouter.delete("/:id", userController.deleteUser);
 userRouter.get("", userController.getAllUser);
 userRouter.get("/:id", userController.getUser);
-userRouter.patch("/:id", profilePicture.single("picture"), userController.updateUser);
+userRouter.patch("", profilePicture.single("profilePicture"), userController.updateUser);
 
 module.exports = userRouter;

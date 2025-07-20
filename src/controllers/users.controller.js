@@ -1,5 +1,5 @@
 const {constants: http} = require("http2");
-const {User, Sequelize} = require("../models");
+const {User, Sequelize, Profile, sequelize} = require("../models");
 const fs = require("fs");
 const path = require("path");
 
@@ -81,66 +81,87 @@ exports.getAllUser = async function(req, res) {
 };
 
 exports.updateUser = async function(req, res) {
-  const {id} = req.params;
-  const newData = req.body;
-  const filename = req.file ? req.file.filename : null;
-  const user = await User.findByPk(parseInt(id));
-  if (user) {
-    let found;
-    if (newData.email !== user.email) {
-      found = await User.findOne({where: {email:newData.email}});
+  const t = await sequelize.transaction();
+  try {
+    const id = req.userId;
+    const newData = req.body;
+    const filename = req.file ? req.file.filename : null;
+
+    const user = await User.findByPk(id, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+    if (!user) {
+      return res.status(http.HTTP_STATUS_NOT_FOUND).json({
+        success: false,
+        message: "User not found",
+      });
     }
-    if (!found) {
-      let userUpdate;
-      if (filename) {
-        if (user.picture) {
-          const filePath = path.join("uploads", "profile-picture", user.picture);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        }
-        userUpdate = await User.update(
-          {
-            ...newData,
-            picture:filename
-          },
-          {
-            where: {
-            id: parseInt(id),
-            },
-            returning: true,
-          }
-        );
-      }
-      else {
-        userUpdate = await User.update(
-        {
-          ...newData,
-        },
-        {
-          where: {
-            id: parseInt(id),
-          },
-          returning: true,
+
+    if (newData.email && newData.email !== user.email) {
+      const found = await User.findOne({ where: { email: newData.email } });
+      if (found) {
+        return res.status(http.HTTP_STATUS_CONFLICT).json({
+          success: false,
+          message: "Email has been used by other user",
         });
       }
-      userUpdate = userUpdate[1][0];
-      const responseUser = {id:userUpdate.id,email:userUpdate.email,picture:userUpdate.picture};
-      res.status(http.HTTP_STATUS_OK).json({
-        success: true,
-        message: "Berhasil melakukan update data",
-        results: responseUser,
-      });
-    } else {
-      res.status(http.HTTP_STATUS_CONFLICT).json({
-        success: false,
-        message: "Email sudah digunakan oleh user lain",
-      });
     }
-  } else {
-    res.status(http.HTTP_STATUS_NOT_FOUND).json({
+
+    const profile = await Profile.findOne({
+      where: { id_user: id },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (filename && profile?.profile_picture) {
+      const oldPath = path.join("uploads", "profile-picture", profile.profile_picture);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    await User.update(
+      {
+        email: newData.email || user.email,
+        updated_at: new Date(),
+      },
+      { where: { id }, transaction: t }
+    );
+    if (profile) {
+      await Profile.update(
+        {
+          name: newData.name || profile.name,
+          phone_number: newData.phone_number || profile.phone_number,
+          profile_picture: filename || profile.profile_picture,
+          updated_at: new Date(),
+        },
+        { where: { id_user: id }, transaction: t }
+      );
+    }
+    await t.commit();
+
+    const updatedUser = await User.findByPk(id, {
+      include: Profile,
+    });
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Successful to update user's data",
+      results: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.Profile.name,
+        phone_number: updatedUser.Profile.phone_number,
+        profile_picture: updatedUser.Profile.profile_picture,
+      },
+    });
+  } catch (err) {
+    await t.rollback();
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "User tidak ditemukan",
+      message: "Failed to update user's data",
     });
   }
 };
