@@ -1,31 +1,50 @@
 const {constants: http} = require("http2");
 const {sequelize, User, Profile} = require("../models");
-const { validationResult } = require("express-validator");
+const { generateToken } = require("../utils/generateToken");
 const argon2 = require("argon2");
 
 exports.login = async function(req, res){
-  const {email, password} = req.body;
-  const validate = validationResult(req);
-  if (!validate.isEmpty()) {
-    return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
-      success: false,
-      message: "Validation error",
-      errors: validate.array(),
-    });
-  }
+  const { email, password } = req.body;
 
-  const found = await User.findOne({where: {email:email, password:password}});
-  if(found) {
-    const responseUser = {id: found.id, email: found.email, picture: found.picture};
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Login failed",
+        errors: "email is not registered",
+      });
+    }
+    const valid = await argon2.verify(user.password, password);
+    if (!valid) {
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        success: false,
+        message: "Login failed",
+        errors: "password is incorrect",
+      });
+    }
+    const profile = await Profile.findOne({ where: { id_user: user.id } });
+    const token = generateToken({ id: user.id, role: user.role });
+
     return res.status(http.HTTP_STATUS_OK).json({
-        success: true,
-        message: "Berhasil login",
-        result: responseUser
+      success: true,
+      message: "Login success!",
+      result: {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          name: profile?.name || null,
+          phoneNumber: profile?.phone_number || null,
+        },
+      },
     });
-  } else {
-    return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+  } catch (err) {
+    console.error(err);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Email atau password salah",
+      message: "Internal server error",
     });
   }
 };
@@ -52,7 +71,7 @@ exports.register = async function(req, res) {
       return user;
     });
 
-    return res.status(201).json({
+    return res.status(http.HTTP_STATUS_CREATED).json({
       success: true,
       message: "Create user success!",
       result: {
@@ -67,7 +86,7 @@ exports.register = async function(req, res) {
         ? "email already used by another user"
         : "phone number already used by another user";
 
-      return res.status(400).json({
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
         success: false,
         message: "Failed to register user",
         errors: errorMsg,
@@ -75,7 +94,7 @@ exports.register = async function(req, res) {
     }
 
     console.error(err);
-    return res.status(500).json({
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Internal server error",
     });
